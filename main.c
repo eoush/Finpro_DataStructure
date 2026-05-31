@@ -3,6 +3,95 @@
 #include<string.h>
 
 //nama stuctnya product aja ya biar sama.... ty
+
+int checkName(struct product* curr, char name[]){
+
+    if (curr == NULL){
+        return 0;
+    }
+
+    if (strcmp(curr->name, name) == 0){
+        return 1;
+    }
+
+    int leftCheck = checkName(curr->left, name);
+    if (leftCheck){
+        return 1;
+    }
+
+    return checkName(curr->right, name);
+}
+
+int checkID(struct product* curr, int id){
+
+    if (curr == NULL){
+        return 0;
+    }
+
+    if (curr->id == id){
+        return 1;
+    }
+
+    if (id < curr->id){
+        return checkID(curr->left, id);
+    } else {
+        return checkID(curr->right, id);
+    }
+}
+
+int isInvalidIDLength(int id){
+    if(id < 10000 || id > 99999) {
+        return 1;
+    }
+
+    return 0;
+}
+
+void insert(){
+    int id, price, usedID, invalidIdLength;
+    char name[100];
+
+    curr = (struct product*)malloc(sizeof(struct product));
+    curr = root;
+
+    printf("\n=== INSERT PRODUCT ===\n");
+    do {
+        printf("Product Name : ");
+        scanf(" %[^\n]", name);
+
+        if(checkName(curr, name)){
+            printf("Product is already exists!\n");
+        }
+    } while (checkName(curr, name));
+
+    do {
+        printf("Product ID   : ");
+        scanf("%d", &id);
+
+        usedID = checkID(curr, id);
+        invalidIdLength = isInvalidIDLength(id);
+
+        if(usedID) {
+            printf("Product Id is already used!\n");
+        }
+
+        if (invalidIdLength) {
+            printf("Product Id must be 5 digits!\n");
+        }
+    } while (usedID || invalidIdLength);
+
+    do {
+        printf("Product Price: ");
+        scanf("%d", &price);
+
+        if (price <= 0){
+            printf("Price cannot be negative or zero!\n");
+        }
+    } while (price <= 0);
+
+    printf("\nProduct Added Successfully!\n");
+}
+
 //ini pny DAVED
 void searchID(struct product* curr, int id){
 
@@ -74,7 +163,7 @@ void search(){
             char name[100];
 
             printf("Input Product Name: ");
-            scanf("%[^\n]", name);
+            scanf(" %[^\n]", name);
 
             searchByName(root, name);
         }
@@ -85,6 +174,115 @@ void search(){
 
     } while(choice < 1 || choice > 2);
 }// ini buat yang di int main
+
+// belum kelar
+void delete(){
+    int choice, id;
+    char name[100], confirm;
+
+    printf("\n=== DELETE PRODUCT ===\n");
+    printf("1. Delete by ID\n");
+    printf("2. Delete by Name\n");
+    do {
+        printf("Choose: ");
+        scanf("%d", &choice);
+
+        if(choice < 1 || choice > 2){
+            printf("Invalid Menu!\n");
+        }
+    } while(choice < 1 || choice > 2);
+
+    switch (choice){
+        case 1:
+            do {
+                printf("Input Product ID: ");
+                scanf("%d", &id);
+
+                searchByID(root, id);
+
+                if(checkID(root, id)) {
+                    printf("Are you sure you want to delete this product? [y/n]: ");
+                    scanf(" %c", &confirm);
+                    if(confirm == 'y' || confirm == 'Y') {
+                        // Call delete function here
+                        printf("Product deleted successfully!\n");
+                    } else {
+                        printf("Deletion cancelled.\n");
+                        break;
+                    }
+                }
+            } while(!checkID(root, id));
+            break;
+        case 2:
+            do {
+                printf("Input Product Name: ");
+                scanf(" %[^\n]", name);
+
+                searchByName(root, name);
+
+                if(checkName(root, name)) {
+                    printf("Are you sure you want to delete this product? [y/n]: ");
+                    scanf(" %c", &confirm);
+                    if(confirm == 'y' || confirm == 'Y') {
+                        // Call delete function here
+                        printf("Product deleted successfully!\n");
+                    } else {
+                        printf("Deletion cancelled.\n");
+                        break;
+                    }
+                }
+            } while(!checkName(root, name));
+            break;
+    }
+}
+
+// belum kelar
+void update(){
+    int choice, id, newPrice;
+    char name[100];
+
+    printf("\n=== UPDATE PRODUCT ===\n");
+    printf("1. Update by ID\n");
+    printf("2. Update by Name\n");
+    do {
+        printf("Choose: ");
+        scanf("%d", &choice);
+
+        if(choice < 1 || choice > 2){
+            printf("Invalid Menu!\n");
+        }
+    } while(choice < 1 || choice > 2);
+
+    if(choice == 1) {
+        do {
+            printf("Input Product ID: ");
+            scanf("%d", &id);
+
+            searchByID(root, id);
+
+            if(checkID(root, id)) {
+                printf("Input New Price: ");
+                scanf("%d", &newPrice);
+                // Call update function here
+                printf("Product price updated successfully!\n");
+            }
+        } while(!checkID(root, id));
+    } else {      
+        do {
+            printf("Input Product Name: ");
+            scanf(" %[^\n]", name);
+
+            searchByName(root, name);
+
+            if(checkName(root, name)) {
+                printf("Input New Price: ");
+                scanf("%d", &newPrice);
+                // Call update function here
+                printf("Product price updated successfully!\n");
+            }
+        } while(!checkName(root, name));
+    }            
+}
 
 void findProduct(struct product* curr, int id, struct product** result){
 
