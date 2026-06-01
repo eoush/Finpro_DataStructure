@@ -366,20 +366,23 @@ int main(){
             displayProduct(root);
         }
 
-        printf("\n--- TOKO MABOK ---\n");
-        printf("1. Insert Product\n");
-        printf("2. Search Product\n");
-        printf("3. Update Product\n");
-        printf("4. Delete Product\n");
-        printf("5. Checkout\n");
-        printf("6. Exit Program\n");
+        printf("\n+--------------------------+\n");
+        printf("|        TOKO MABOK        |\n");
+        printf("+--------------------------+\n");
+        printf("| 1. Insert Product        |\n");
+        printf("| 2. Search Product        |\n");
+        printf("| 3. Update Product        |\n");
+        printf("| 4. Delete Product        |\n");
+        printf("| 5. Checkout             |\n");
+        printf("| 6. Exit Program         |\n");
+        printf("+--------------------------+\n");
         printf("Choose: ");
         scanf("%d", &choice);
 
         switch(choice){
 
             case 1:
-                //nnti
+                insert();
                 break;
 
             case 2:
@@ -387,11 +390,11 @@ int main(){
                 break;
 
             case 3:
-                //nnti
+                update();
                 break;
 
             case 4:
-                //nnti
+                delete();
                 break;
 
             case 5:
