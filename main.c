@@ -1,8 +1,241 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
 
-//nama stuctnya product aja ya biar sama.... ty
+struct product {
+    int id;
+    char name[100];
+    int price;
+    int height;
+    struct product *left;
+    struct product *right;
+};
+
+struct product *root = NULL;
+struct product *curr = NULL;
+
+struct product* createproduct(int id, char name[], int price) {
+
+    struct product *node = (struct product*)malloc(sizeof(struct product));
+
+    node->id = id;
+    strcpy(node->name, name);
+    node->price = price;
+    node->height = 1;
+    node->left = NULL;
+    node->right = NULL;
+
+    return node;
+}
+
+int getheight(struct product *node) {
+
+    if (node == NULL) {
+        return 0;
+    }
+
+    return node->height;
+}
+
+int max(int a, int b) {
+
+    if (a > b) {
+        return a;
+    }
+    else {
+        return b;
+    }
+}
+
+int getbalance(struct product *node) {
+
+    if (node == NULL) {
+        return 0;
+    }
+
+    return getheight(node->left) - getheight(node->right);
+}
+
+struct product* leftrotate(struct product *x) {
+
+    struct product *y = x->right;
+    struct product *temp = y->left;
+
+    y->left = x;
+    x->right = temp;
+
+    // update height
+    x->height = 1 + max(getheight(x->left), getheight(x->right));
+    y->height = 1 + max(getheight(y->left), getheight(y->right));
+
+    return y;
+}
+
+struct product* rightrotate(struct product *y) {
+
+    struct product *x = y->left;
+    struct product *temp = x->right;
+
+    x->right = y;
+    y->left = temp;
+
+    y->height = 1 + max(getheight(y->left), getheight(y->right));
+    x->height = 1 + max(getheight(x->left), getheight(x->right));
+
+    return x;
+}
+
+struct product* insertproduct(struct product *node, int id, char name[], int price) {
+
+    if (node == NULL) {
+        return createproduct(id, name, price);
+    }
+
+    if (id < node->id) {
+        node->left = insertproduct(node->left, id, name, price);
+    }
+    else if (id > node->id) {
+        node->right = insertproduct(node->right, id, name, price);
+    }
+    else {
+        return node;
+    }
+
+    node->height = 1 + max(getheight(node->left), getheight(node->right));
+
+    int balance = getbalance(node);
+
+    //ll
+    if (balance > 1 && id < node->left->id) {
+        return rightrotate(node);
+    }
+
+    //rr
+    if (balance < -1 && id > node->right->id) {
+        return leftrotate(node);
+    }
+
+    //lr
+    if (balance > 1 && id > node->left->id) {
+        node->left = leftrotate(node->left);
+        return rightrotate(node);
+    }
+
+    //rl
+    if (balance < -1 && id < node->right->id) {
+        node->right = rightrotate(node->right);
+        return leftrotate(node);
+    }
+
+    return node;
+}
+
+struct product* findmin(struct product *node) {
+
+    struct product *curr = node;
+
+    while (curr->left != NULL) {
+        curr = curr->left;
+    }
+
+    return curr;
+}
+
+struct product* deleteproduct(struct product *node, int id) {
+
+    if (node == NULL) {
+        return NULL;
+    }
+
+    if (id < node->id) {
+        node->left = deleteproduct(node->left, id);
+    }
+    else if (id > node->id) {
+        node->right = deleteproduct(node->right, id);
+    }
+    else {
+        if (node->left == NULL || node->right == NULL) {
+
+            struct product *temp = NULL;
+
+            if (node->left != NULL) {
+                temp = node->left;
+            }
+            else {
+                temp = node->right;
+            }
+
+            if (temp == NULL) {
+                temp = node;
+                node = NULL;
+            }
+            else {
+                *node = *temp;
+            }
+
+            free(temp);
+        }
+        else {
+
+            struct product *temp = findmin(node->right);
+
+            node->id = temp->id;
+            strcpy(node->name, temp->name);
+            node->price = temp->price;
+
+            node->right = deleteproduct(node->right, temp->id);
+        }
+    }
+
+    if (node == NULL) {
+        return NULL;
+    }
+
+    node->height = 1 + max(getheight(node->left), getheight(node->right));
+
+    int balance = getbalance(node);
+
+    //ll
+    if (balance > 1 && getbalance(node->left) >= 0) {
+        return rightrotate(node);
+    }
+
+    //lr
+    if (balance > 1 && getbalance(node->left) < 0) {
+        node->left = leftrotate(node->left);
+        return rightrotate(node);
+    }
+
+    //rr
+    if (balance < -1 && getbalance(node->right) <= 0) {
+        return leftrotate(node);
+    }
+
+    //rl
+    if (balance < -1 && getbalance(node->right) > 0) {
+        node->right = rightrotate(node->right);
+        return leftrotate(node);
+    }
+
+    return node;
+}
+
+void displayproduct(struct product *node) {
+
+    if (node == NULL) {
+        return;
+    }
+
+    displayproduct(node->left);
+
+    printf("| %-5d | %-20s | %-10d |\n", node->id, node->name, node->price);
+
+    displayproduct(node->right);
+}
+
 int role = 0;
 
 void login(){
