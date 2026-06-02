@@ -68,7 +68,6 @@ struct product *leftrotate(struct product *x) {
     y->left = x;
     x->right = temp;
 
-    // update height
     x->height = 1 + max(getheight(x->left), getheight(x->right));
     y->height = 1 + max(getheight(y->left), getheight(y->right));
 
@@ -477,7 +476,7 @@ void login() {
             scanf("%s", password);
 
             if (strcmp(username, "admin") == 0 && strcmp(password, "12345") == 0)
-            { // kalo login admin pake usn "admin" sama pass "12345"
+            { 
                 role = 1;
                 printf("Login Success as Admin!\n");
 
