@@ -3,6 +3,52 @@
 #include<string.h>
 
 //nama stuctnya product aja ya biar sama.... ty
+int role = 0;
+
+void login(){
+
+    int choice;
+    char username[100];
+    char password[100];
+
+    do{
+
+        printf("\n=== LOGIN ===\n");
+        printf("1. Admin\n");
+        printf("2. Customer\n");
+        printf("Choose: ");
+        scanf("%d", &choice);
+
+        switch(choice){
+
+            case 1:
+
+                printf("Username : ");
+                scanf("%s", username);
+
+                printf("Password : ");
+                scanf("%s", password);
+
+                if(strcmp(username, "admin") == 0 && strcmp(password, "12345") == 0);// kalo login admin pake usn "admin" sama pass "12345"
+                    role = 1;
+                    printf("Login Success as Admin!\n");
+                }
+                else{
+                    printf("Wrong Username or Password!\n");
+                }
+                break;
+
+            case 2:
+                role = 2;
+                printf("Login Success as Customer!\n");
+                break;
+
+            default:
+                printf("Invalid Menu!\n");
+        }
+
+    }while(role == 0);
+}
 
 int checkName(struct product* curr, char name[]){
 
@@ -353,6 +399,8 @@ void checkout(){
 
 int main(){
 
+    login();
+
     int choice;
 
     do {
@@ -373,8 +421,8 @@ int main(){
         printf("| 2. Search Product        |\n");
         printf("| 3. Update Product        |\n");
         printf("| 4. Delete Product        |\n");
-        printf("| 5. Checkout             |\n");
-        printf("| 6. Exit Program         |\n");
+        printf("| 5. Checkout Product      |\n");
+        printf("| 6. Exit Program          |\n");
         printf("+--------------------------+\n");
         printf("Choose: ");
         scanf("%d", &choice);
@@ -382,19 +430,40 @@ int main(){
         switch(choice){
 
             case 1:
-                insert();
+
+                if(role != 1){
+                    printf("Access Denied! Admin Only!\n");
+                }
+                else{
+                    insert();
+                }
+
                 break;
 
             case 2:
-                seach();
+                search();
                 break;
 
             case 3:
-                update();
+
+                if(role != 1){
+                    printf("Access Denied! Admin Only!\n");
+                }
+                else{
+                    update();
+                }
+
                 break;
 
             case 4:
-                delete();
+
+                if(role != 1){
+                    printf("Access Denied! Admin Only!\n");
+                }
+                else{
+                    delete();
+                }
+
                 break;
 
             case 5:
