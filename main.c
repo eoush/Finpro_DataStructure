@@ -2,8 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #define MAX_PRODUCT 1000
+#define FILE_NAME "liquor.txt"
 
-struct product {
+struct product{
     int id;
     char name[100];
     int price;
@@ -14,7 +15,11 @@ struct product {
 
 struct product *root = NULL;
 
-struct product *createproduct(int id, char name[], int price) {
+void saveData(struct product *curr, FILE *fp);
+void writeFile();
+void readFile();
+
+struct product *createproduct(int id, char name[], int price){
 
     struct product *node = (struct product *)malloc(sizeof(struct product));
 
@@ -28,7 +33,7 @@ struct product *createproduct(int id, char name[], int price) {
     return node;
 }
 
-int getheight(struct product *node) {
+int getheight(struct product *node){
 
     if (node == NULL)
     {
@@ -38,7 +43,7 @@ int getheight(struct product *node) {
     return node->height;
 }
 
-int max(int a, int b) {
+int max(int a, int b){
 
     if (a > b)
     {
@@ -50,7 +55,7 @@ int max(int a, int b) {
     }
 }
 
-int getbalance(struct product *node) {
+int getbalance(struct product *node){
 
     if (node == NULL)
     {
@@ -354,7 +359,7 @@ int comparePriceDesc(const void *a, const void *b) {
 int sortType = 2;
 int sortOrder = 2;
 
-void printRupiah(int price) {
+void printRupiah(int price){
     if (price >= 1000)
     {
         printRupiah(price / 1000);
@@ -366,7 +371,7 @@ void printRupiah(int price) {
     }
 }
 
-void formatRupiah(int price, char result[]) {
+void formatRupiah(int price, char result[]){
     char temp[50];
     sprintf(temp, "%d", price);
 
@@ -396,7 +401,7 @@ void formatRupiah(int price, char result[]) {
     }
 }
 
-void displayproduct() {
+void displayproduct(){
 
     productCount = 0;
 
@@ -442,20 +447,19 @@ void displayproduct() {
 
 int role = 0;
 
-void login() {
+void login(){
 
     int choice;
     char username[100];
     char password[100];
 
-    do
-    {
+    do{
 
         printf("\n=== LOGIN ===\n");
         printf("1. Admin\n");
         printf("2. Customer\n");
         do {
-            printf("Choose: ");
+            printf("Choose[1/2]: ");
             scanf("%d", &choice);
 
             if (choice < 1 || choice > 2) {
@@ -507,7 +511,7 @@ void login() {
     } while (role == 0);
 }
 
-int checkName(struct product *curr, char name[]) {
+int checkName(struct product *curr, char name[]){
 
     if (curr == NULL)
     {
@@ -528,7 +532,7 @@ int checkName(struct product *curr, char name[]) {
     return checkName(curr->right, name);
 }
 
-int checkID(struct product *curr, int id) {
+int checkID(struct product *curr, int id){
 
     if (curr == NULL)
     {
@@ -550,7 +554,7 @@ int checkID(struct product *curr, int id) {
     }
 }
 
-int isInvalidIDLength(int id) {
+int isInvalidIDLength(int id){
     if (id < 10000 || id > 99999)
     {
         return 1;
@@ -559,7 +563,7 @@ int isInvalidIDLength(int id) {
     return 0;
 }
 
-void insert() {
+void insert(){
     clearScreen();
 
     int id, price, usedID, invalidIdLength;
@@ -615,13 +619,14 @@ void insert() {
     } while (price <= 0);
 
     root = insertproduct(root, id, name, price);
+    writeFile();
     printf("\nProduct Added Successfully!\n");
 
     pressEnter();
     clearScreen();
 }
 
-void searchID(struct product *curr, int id) {
+void searchID(struct product *curr, int id){
 
     if (curr == NULL)
     {
@@ -650,7 +655,7 @@ void searchID(struct product *curr, int id) {
     }
 }
 
-void searchName(struct product *curr, char name[]) {
+void searchName(struct product *curr, char name[]){
 
     if (curr == NULL)
     {
@@ -673,13 +678,12 @@ void searchName(struct product *curr, char name[]) {
     searchName(curr->right, name);
 } 
 
-void search() {
+void search(){
     clearScreen();
 
     int choice;
 
-    do
-    {
+    do{
 
         printf("\n=== SEARCH PRODUCT ===\n");
         printf("1. Search by ID\n");
@@ -688,8 +692,7 @@ void search() {
         printf("Choose: ");
         scanf("%d", &choice);
 
-        if (choice == 1)
-        {
+        if (choice == 1){
 
             int id;
 
@@ -702,8 +705,7 @@ void search() {
             clearScreen();
         }
 
-        else if (choice == 2)
-        {
+        else if (choice == 2){
 
             char name[100];
 
@@ -739,7 +741,7 @@ void search() {
     } while (choice < 1 || choice > 3);
 } 
 
-void delete() {
+void delete(){
     clearScreen();
 
     int choice, id;
@@ -777,6 +779,7 @@ void delete() {
                 if (confirm == 'y' || confirm == 'Y')
                 {
                     root = deleteproduct(root, id);
+                    writeFile();
                     printf("Product deleted successfully!\n");
 
                     pressEnter();
@@ -818,13 +821,14 @@ void delete() {
                 {
                     int id = getIDByName(root, name);
 
-                    if (id != -1)
-                    {
+                    if (id != -1){
                         root = deleteproduct(root, id);
+                        writeFile();
                         printf("Product deleted successfully!\n");
 
                         pressEnter();
                         clearScreen();
+                        
                         return;
                     }
                 }
@@ -845,7 +849,7 @@ void delete() {
     }
 }
 
-void updatePriceByID(struct product *curr, int id, int newPrice) {
+void updatePriceByID(struct product *curr, int id, int newPrice){
     if (curr == NULL)
     {
         return;
@@ -867,7 +871,7 @@ void updatePriceByID(struct product *curr, int id, int newPrice) {
     }
 }
 
-void updatePriceByName(struct product *curr, char name[], int newPrice) {
+void updatePriceByName(struct product *curr, char name[], int newPrice){
     if (curr == NULL)
     {
         return;
@@ -884,7 +888,7 @@ void updatePriceByName(struct product *curr, char name[], int newPrice) {
     updatePriceByName(curr->right, name, newPrice);
 }
 
-void update() {
+void update(){
     clearScreen();
 
     int choice, id, newPrice;
@@ -928,7 +932,7 @@ void update() {
                 } while (newPrice <= 0);
 
                 updatePriceByID(root, id, newPrice);
-
+                writeFile();
                 printf("Product price updated successfully!\n");
 
                 pressEnter();
@@ -967,7 +971,7 @@ void update() {
                 } while (newPrice <= 0);
 
                 updatePriceByName(root, name, newPrice);
-
+                writeFile();
                 printf("Product price updated successfully!\n");
 
                 pressEnter();
@@ -983,7 +987,7 @@ void update() {
     }
 }
 
-void findProduct(struct product *curr, int id, struct product **result) {
+void findProduct(struct product *curr, int id, struct product **result){
 
     if (curr == NULL)
     {
@@ -1006,7 +1010,7 @@ void findProduct(struct product *curr, int id, struct product **result) {
     }
 } 
 
-void checkout() {
+void checkout(){
     clearScreen();
 
     if (root == NULL)
@@ -1094,7 +1098,7 @@ void checkout() {
     clearScreen();
 }
 
-void sortingMenu() {
+void sortingMenu(){
     clearScreen();
 
     printf("=== SORTING MENU ===\n");
@@ -1127,7 +1131,7 @@ void sortingMenu() {
     clearScreen();
 }
 
-void logout() {
+void logout(){
     char confirm;
 
     do {
@@ -1156,13 +1160,68 @@ void logout() {
     } while (1);
 }
 
-int main() {
-    root = insertproduct(root, 12345, "Beer", 50000);
-    root = insertproduct(root, 12346, "Wine", 750000);
-    root = insertproduct(root, 12347, "Vodka", 350000);
-    root = insertproduct(root, 12348, "Tequila", 650000);
-    root = insertproduct(root, 12349, "Gin", 400000);
-    root = insertproduct(root, 12350, "Sake", 350000);
+
+void saveData(struct product *curr, FILE *fp){
+
+    if(curr == NULL){
+        return;
+    }
+
+    saveData(curr->left, fp);
+
+    fprintf(fp, "%d|%s|%d\n",
+            curr->id,
+            curr->name,
+            curr->price);
+
+    saveData(curr->right, fp);
+}
+
+void writeFile(){
+
+    FILE *fp = fopen(FILE_NAME, "w");
+
+    if(fp == NULL){
+        return;
+    }
+
+    saveData(root, fp);
+
+    fclose(fp);
+}
+
+void readFile(){
+
+    FILE *fp = fopen(FILE_NAME, "r");
+
+    if(fp == NULL){
+        return;
+    }
+
+    int id;
+    int price;
+    char name[100];
+
+    while(fscanf(fp,
+                 "%d|%[^|]|%d\n",
+                 &id,
+                 name,
+                 &price) == 3){
+
+        root = insertproduct(
+            root,
+            id,
+            name,
+            price
+        );
+    }
+
+    fclose(fp);
+}
+
+int main(){
+    
+    readFile();
 
     login();
 
@@ -1280,3 +1339,9 @@ int main() {
     freeTree(root);
     return 0;
 }
+
+// NOTE :
+// Pada saat pembuatan video presentasi belum menambahkan sistem file processing.
+// File Processing yang ada pada source code ditambahkan agar perubahan yang dilakukan dapat tersimpan untuk penggunaan berikutnya.
+// Mekanismenya yaitu perubahan data yang terjadi akan tercatat ke dalam file "liquor.txt", yang akan dibaca program setiap kali program dirun.
+// Terima kasih....
