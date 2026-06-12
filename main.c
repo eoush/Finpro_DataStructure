@@ -702,7 +702,7 @@ void insert()
 
         if (checkName(root, name))
         {
-            printf(Green"Product is already exists!\n"Reset);
+            printf(Green "Product is already exists!\n" Reset);
         }
     } while (checkName(root, name));
 
@@ -783,14 +783,14 @@ void searchName(struct product *curr, char name[])
         char rupiah[50];
         formatRupiah(curr->price, rupiah);
 
-        printf(WineRed "\n=================== "Gold"PRODUCT FOUND "WineRed"===================\n");
+        printf(WineRed "\n=================== " Gold "PRODUCT FOUND " WineRed "===================\n");
         printf(
-            "|| " White "Id    : %-5d                                   "WineRed"||\n"
+            "|| " White "Id    : %-5d                                   " WineRed "||\n"
             "|| " White "Name  : %-19s                     " WineRed "||\n"
-            "|| " White "Price : "GreenMoney"Rp%-16s                      " WineRed "||\n",
-               curr->id,
-               curr->name,
-               rupiah);
+            "|| " White "Price : " GreenMoney "Rp%-16s                      " WineRed "||\n",
+            curr->id,
+            curr->name,
+            rupiah);
         printf("=====================================================\n" Reset);
     }
 
@@ -876,11 +876,11 @@ void delete()
 
     productList();
     printf(WineRed "+--------------------------------------------------+\n");
-    printf("|" White "  Delete Product                                 " WineRed "|\n");
+    printf("|" White "  Delete Product                                  " WineRed "|\n");
     printf(WineRed "+--------------------------------------------------+\n");
-    printf("|" White " 1. Delete by ID                                   " WineRed "|\n");
-    printf("|" White " 2. Delete by Name                                 " WineRed "|\n");
-    printf("|" White " 3. Back to Main Menu                              " WineRed "|\n");
+    printf("|" White " 1. Delete by ID                                  " WineRed "|\n");
+    printf("|" White " 2. Delete by Name                                " WineRed "|\n");
+    printf("|" White " 3. Back to Main Menu                             " WineRed "|\n");
     printf(WineRed "+--------------------------------------------------+\n" Reset);
     do
     {
@@ -1125,8 +1125,8 @@ void selectUpdateNameBasedOn()
     printf(WineRed "+--------------------------------------------------+\n");
     printf("|" White "  Update Based On                                 " WineRed "|\n");
     printf(WineRed "+--------------------------------------------------+\n");
-    printf("| "White"1. ID                                            "WineRed"|\n");
-    printf("| "White"2. Name                                          "WineRed"|\n");
+    printf("| " White "1. ID                                            " WineRed "|\n");
+    printf("| " White "2. Name                                          " WineRed "|\n");
     printf("+--------------------------------------------------+\n" Reset);
     do
     {
@@ -1135,7 +1135,7 @@ void selectUpdateNameBasedOn()
 
         if (choice < 1 || choice > 2)
         {
-            printf(Red"Invalid Choice!\n"Reset);
+            printf(Red "Invalid Choice!\n" Reset);
         }
     } while (choice < 1 || choice > 2);
 
@@ -1152,7 +1152,7 @@ void selectUpdateNameBasedOn()
             {
                 updateProductName(id, choice, name);
                 writeFile();
-                printf(Green"\nProduct name updated successfully!\n"Reset);
+                printf(Green "\nProduct name updated successfully!\n" Reset);
 
                 pressEnter();
                 clearScreen();
@@ -1169,7 +1169,7 @@ void selectUpdateNameBasedOn()
 
             if (!checkName(root, name))
             {
-                printf(Red"Product Not Found!\n"Reset);
+                printf(Red "Product Not Found!\n" Reset);
             }
             else
             {
@@ -1180,7 +1180,7 @@ void selectUpdateNameBasedOn()
             {
                 updateProductName(id, choice, name);
                 writeFile();
-                printf(Green"\nProduct name updated successfully!\n"Reset);
+                printf(Green "\nProduct name updated successfully!\n" Reset);
 
                 pressEnter();
                 clearScreen();
@@ -1203,8 +1203,8 @@ void selectUpdatePriceBasedOn()
     printf(WineRed "+--------------------------------------------------+\n");
     printf("|" White "  Update Based On                                 " WineRed "|\n");
     printf(WineRed "+--------------------------------------------------+\n");
-    printf("| "White"1. ID                                            "WineRed"|\n");
-    printf("| "White"2. Name                                          "WineRed"|\n");
+    printf("| " White "1. ID                                            " WineRed "|\n");
+    printf("| " White "2. Name                                          " WineRed "|\n");
     printf("+--------------------------------------------------+\n" Reset);
     do
     {
@@ -1213,7 +1213,7 @@ void selectUpdatePriceBasedOn()
 
         if (choice < 1 || choice > 2)
         {
-            printf(Red"Invalid Choice!\n"Reset);
+            printf(Red "Invalid Choice!\n" Reset);
         }
     } while (choice < 1 || choice > 2);
 
@@ -1230,7 +1230,7 @@ void selectUpdatePriceBasedOn()
             {
                 updateProductPrice(id, choice, name);
                 writeFile();
-                printf(Green"\nProduct Price updated successfully!\n"Reset);
+                printf(Green "\nProduct Price updated successfully!\n" Reset);
 
                 pressEnter();
                 clearScreen();
@@ -1247,7 +1247,7 @@ void selectUpdatePriceBasedOn()
 
             if (!checkName(root, name))
             {
-                printf(Red"Product Not Found!\n"Reset);
+                printf(Red "Product Not Found!\n" Reset);
             }
             else
             {
@@ -1258,7 +1258,7 @@ void selectUpdatePriceBasedOn()
             {
                 updateProductPrice(id, choice, name);
                 writeFile();
-                printf(Green"\nProduct Price updated successfully!\n"Reset);
+                printf(Green "\nProduct Price updated successfully!\n" Reset);
 
                 pressEnter();
                 clearScreen();
@@ -1283,9 +1283,9 @@ void update()
     printf(WineRed "+--------------------------------------------------+\n");
     printf("|" White "  Update Product                                  " WineRed "|\n");
     printf(WineRed "+--------------------------------------------------+\n");
-    printf("| "White"1. Update Product Name                           "WineRed"|\n");
-    printf("| "White"2. Update Product Price                          "WineRed"|\n");
-    printf("| "White"3. Back to Main Menu                             "WineRed"|\n");
+    printf("| " White "1. Update Product Name                           " WineRed "|\n");
+    printf("| " White "2. Update Product Price                          " WineRed "|\n");
+    printf("| " White "3. Back to Main Menu                             " WineRed "|\n");
     printf("+--------------------------------------------------+\n" Reset);
     do
     {
@@ -1351,7 +1351,7 @@ void checkout()
 
         int id, qty;
 
-        printf(WineRed "+-------------------- "Gold"CHECKOUT "WineRed"--------------------+\n" Reset);
+        printf(WineRed "+-------------------- " Gold "CHECKOUT " WineRed "--------------------+\n" Reset);
 
         struct product *item = NULL;
 
@@ -1386,9 +1386,9 @@ void checkout()
 
         printf("\nItem Added!\n");
         printf("Product : %s\n", item->name);
-        printf("Subtotal: "GreenMoney"Rp");
+        printf("Subtotal: " GreenMoney "Rp");
         printRupiah(total);
-        printf(Reset"\n");
+        printf(Reset "\n");
 
         do
         {
@@ -1406,10 +1406,10 @@ void checkout()
 
     } while (choice == 'y' || choice == 'Y');
 
-    printf(WineRed"\n==================== "Gold"FINAL TOTAL "WineRed"====================\n");
-    printf(White"Grand Total : "GreenMoney"Rp");
+    printf(WineRed "\n==================== " Gold "FINAL TOTAL " WineRed "====================\n");
+    printf(White "Grand Total : " GreenMoney "Rp");
     printRupiah(totalall);
-    printf(Reset"\n");
+    printf(Reset "\n");
 
     pressEnter();
     clearScreen();
@@ -1607,7 +1607,10 @@ void adminMenu()
             }
             break;
         case 7:
-            printf("\nThank You!\n");
+            printf(WineRed "\n====================================================\n");
+            printf(Gold "        Thank you for visiting Liquor Store.        \n");
+            printf("               Have a wonderful day!                \n" Reset);
+            printf(WineRed "====================================================\n" Reset);
             break;
         }
     } while (choice != 7);
@@ -1661,10 +1664,10 @@ void customerMenu()
             }
             break;
         case 5:
-            printf(WineRed"\n====================================================\n");
+            printf(WineRed "\n====================================================\n");
             printf(Gold "        Thank you for visiting Liquor Store.        \n");
             printf("               Have a wonderful day!                \n" Reset);
-            printf(WineRed "====================================================\n"Reset);
+            printf(WineRed "====================================================\n" Reset);
             break;
         }
     } while (choice != 5);
