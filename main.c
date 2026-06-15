@@ -2,6 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#ifdef _WIN32
+    #include <windows.h>
+#else
+    #include <sys/ioctl.h>
+    #include <unistd.h>
+#endif
 #define MAX_PRODUCT 1000
 #define FILE_NAME "liquor.txt"
 
@@ -13,6 +19,38 @@
 #define Gold "\x1b[38;5;220m"
 #define WineRed "\x1b[38;5;88m"
 #define Reset "\x1b[0m"
+
+#define BANNER_WIDTH 53
+#define TABLE_WIDTH 51
+
+#define BANNER_WIDTH 53
+#define TABLE_WIDTH 51
+
+int getTerminalWidth()
+{
+#ifdef _WIN32
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
+        return csbi.srWindow.Right - csbi.srWindow.Left + 1;
+#else
+    struct winsize w;
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == 0 && w.ws_col > 0)
+        return w.ws_col;
+#endif
+    return 80; // fallback
+}
+
+void printPadding(int contentWidth)
+{
+    int pad = (getTerminalWidth() - contentWidth) / 2;
+    if (pad < 0)
+        pad = 0;
+    for (int i = 0; i < pad; i++)
+        printf(" ");
+}
+
+#define PB() printPadding(BANNER_WIDTH) 
+#define PT() printPadding(TABLE_WIDTH)  
 
 struct product
 {
@@ -56,7 +94,7 @@ int getheight(struct product *node)
     return node->height;
 }
 
-int max(int a, int b)
+int maxx(int a, int b)
 {
 
     if (a > b)
@@ -89,8 +127,8 @@ struct product *leftrotate(struct product *x)
     y->left = x;
     x->right = temp;
 
-    x->height = 1 + max(getheight(x->left), getheight(x->right));
-    y->height = 1 + max(getheight(y->left), getheight(y->right));
+    x->height = 1 + maxx(getheight(x->left), getheight(x->right));
+    y->height = 1 + maxx(getheight(y->left), getheight(y->right));
 
     return y;
 }
@@ -104,8 +142,8 @@ struct product *rightrotate(struct product *y)
     x->right = y;
     y->left = temp;
 
-    y->height = 1 + max(getheight(y->left), getheight(y->right));
-    x->height = 1 + max(getheight(x->left), getheight(x->right));
+    y->height = 1 + maxx(getheight(y->left), getheight(y->right));
+    x->height = 1 + maxx(getheight(x->left), getheight(x->right));
 
     return x;
 }
@@ -131,7 +169,7 @@ struct product *insertproduct(struct product *node, int id, char name[], int pri
         return node;
     }
 
-    node->height = 1 + max(getheight(node->left), getheight(node->right));
+    node->height = 1 + maxx(getheight(node->left), getheight(node->right));
 
     int balance = getbalance(node);
 
@@ -239,7 +277,7 @@ struct product *deleteproduct(struct product *node, int id)
         return NULL;
     }
 
-    node->height = 1 + max(getheight(node->left), getheight(node->right));
+    node->height = 1 + maxx(getheight(node->left), getheight(node->right));
 
     int balance = getbalance(node);
 
@@ -296,10 +334,9 @@ void pressEnter()
 {
     int c;
 
-    while ((c = getchar()) != '\n' && c != EOF)
-        ;
-
-    printf("\nPress Enter to continue...");
+    while ((c = getchar()) != '\n' && c != EOF);
+    printf("\n");
+    PB(); printf("      Press Enter to continue...");
     getchar();
 }
 
@@ -394,7 +431,7 @@ void printRupiah(int price)
     if (price >= 1000)
     {
         printRupiah(price / 1000);
-        printf(".%-15.3d", price % 1000);
+        printf(".%03d", price % 1000);
     }
     else
     {
@@ -481,7 +518,7 @@ void displayproduct()
     {
         formatRupiah(tempProducts[i].price, rupiah);
 
-        printf(WineRed "| " White "%-5d " WineRed "| " White "%-19s " WineRed "| " GreenMoney "Rp%-16s " WineRed "|\n",
+        PT(); printf(WineRed "     | " White "%-5d " WineRed "| " White "%-19s " WineRed "| " GreenMoney "Rp%-16s " WineRed "|\n",
                tempProducts[i].id,
                tempProducts[i].name,
                rupiah);
@@ -490,67 +527,65 @@ void displayproduct()
 
 void productList()
 {
-    printf(WineRed "\n=================== " Gold "PRODUCT LIST " WineRed "===================\n");
+    PT(); printf(WineRed "     =================== " Gold "PRODUCT LIST " WineRed "===================\n");
 
     if (root == NULL)
     {
-        printf(Red "No Product Available!\n" Reset);
+        PT(); printf(Red "No Product Available!\n" Reset);
     }
     else
     {
-        printf("+-------+---------------------+--------------------+\n");
-        printf("|" Gold " ID    " WineRed "| " Gold "Name                " WineRed "| " Gold "Price (per bottle) " WineRed "|\n");
-        printf("+-------+---------------------+--------------------+\n");
+        PT(); printf("     +-------+---------------------+--------------------+\n");
+        PT(); printf("     |" Gold " ID    " WineRed "| " Gold "Name                " WineRed "| " Gold "Price (per bottle) " WineRed "|\n");
+        PT(); printf("     +-------+---------------------+--------------------+\n");
         displayproduct();
-        printf("+-------+---------------------+--------------------+\n" Reset);
+        PT(); printf("     +-------+---------------------+--------------------+\n" Reset);
     }
 }
 
 void printBanner()
 {
-    printf(WineRed "\n        .~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~.\n");
-    printf(WineRed "       /~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\\\n");
-    printf(WineRed "      =====================================================\n");
-    printf(
-        "      ||" Gold "       _      ___   ___  _   _  ___  ____        " WineRed "||\n"
-        "      ||" Gold "      | |    |_ _| / _ \\| | | |/ _ \\|  _ \\       " WineRed "||\n"
-        "      ||" Gold "      | |     | | | | | | | | | | | | |_) |      " WineRed "||\n"
-        "   ===||" Gold "      | |___  | | | |_| | |_| | |_| |  _ <       " WineRed "||\n"
-        " //   ||" Gold "      |_____||___| \\__\\_\\\\___/ \\___/|_| \\_\\\      " WineRed "||\n"
-        "||    ||" Gold "                                                 " WineRed "||\n"
-        "||    ||" Gold "           ____ _____ ___  ____  _____           " WineRed "||\n"
-        "||    ||" Gold "          / ___|_   _/ _ \\|  _ \\| ____|          " WineRed "||\n"
-        "||    ||" Gold "          \\___ \\ | || | | | |_) |  _|            " WineRed "||\n"
-        " \\\\   ||" Gold "           ___) || || |_| |  _ <| |___           " WineRed "||\n"
-        "   ===||" Gold "          |____/ |_| \\___/|_| \\_\\\\____|          " WineRed "||\n"
-        "      ||" Gold "                                                 " WineRed "||\n"
-        "      ||" Gold "              Luxury in Every Pour.              " WineRed "||\n"
-        "      ||" Gold "                                                 " WineRed "||\n");
-    printf(WineRed "      =====================================================\n" Reset);
+    PB(); printf(WineRed "        .~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~.\n");
+    PB(); printf(WineRed "       /~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\\\n");
+    PB(); printf(WineRed "      =====================================================\n");
+    PB(); printf("      ||" Gold "       _      ___   ___  _   _  ___  ____        " WineRed "||\n");
+    PB(); printf("      ||" Gold "      | |    |_ _| / _ \\| | | |/ _ \\|  _ \\       " WineRed "||\n");
+    PB(); printf("      ||" Gold "      | |     | | | | | | | | | | | | |_) |      " WineRed "||\n");
+    PB(); printf("   ===||" Gold "      | |___  | | | |_| | |_| | |_| |  _ <       " WineRed "||\n");
+    PB(); printf(" //   ||" Gold "      |_____||___| \\__\\_\\\\___/ \\___/|_| \\_\\\      " WineRed "||\n");
+    PB(); printf("||    ||" Gold "                                                 " WineRed "||\n");
+    PB(); printf("||    ||" Gold "           ____ _____ ___  ____  _____           " WineRed "||\n");
+    PB(); printf("||    ||" Gold "          / ___|_   _/ _ \\|  _ \\| ____|          " WineRed "||\n");
+    PB(); printf("||    ||" Gold "          \\___ \\ | || | | | |_) |  _|            " WineRed "||\n");
+    PB(); printf(" \\\\   ||" Gold "           ___) || || |_| |  _ <| |___           " WineRed "||\n");
+    PB(); printf("   ===||" Gold "          |____/ |_| \\___/|_| \\_\\\\____|          " WineRed "||\n");
+    PB(); printf("      ||" Gold "                                                 " WineRed "||\n");
+    PB(); printf("      ||" Gold "              Luxury in Every Pour.              " WineRed "||\n");
+    PB(); printf("      ||" Gold "                                                 " WineRed "||\n");
+    PB(); printf(WineRed "      =====================================================\n" Reset);
 }
 
 void printWelcomeMessage()
 {
-    printf(WineRed "\n        .~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~.\n");
-    printf(WineRed "       /~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\\\n");
-    printf(WineRed "      =====================================================\n");
-    printf(
-        "      ||" Gold "       _      ___   ___  _   _  ___  ____        " WineRed "||\n"
-        "      ||" Gold "      | |    |_ _| / _ \\| | | |/ _ \\|  _ \\       " WineRed "||\n"
-        "      ||" Gold "      | |     | | | | | | | | | | | | |_) |      " WineRed "||\n"
-        "   ===||" Gold "      | |___  | | | |_| | |_| | |_| |  _ <       " WineRed "||\n"
-        " //   ||" Gold "      |_____||___| \\__\\_\\\\___/ \\___/|_| \\_\\\      " WineRed "||\n"
-        "||    ||" Gold "                                                 " WineRed "||\n"
-        "||    ||" Gold "           ____ _____ ___  ____  _____           " WineRed "||\n"
-        "||    ||" Gold "          / ___|_   _/ _ \\|  _ \\| ____|          " WineRed "||\n"
-        "||    ||" Gold "          \\___ \\ | || | | | |_) |  _|            " WineRed "||\n"
-        " \\\\   ||" Gold "           ___) || || |_| |  _ <| |___           " WineRed "||\n"
-        "   ===||" Gold "          |____/ |_| \\___/|_| \\_\\\\____|          " WineRed "||\n"
-        "      ||" Gold "                                                 " WineRed "||\n"
-        "      ||" Gold "           Welcome to the Liquor Store           " WineRed "||\n"
-        "      ||" Gold "              Luxury in Every Pour.              " WineRed "||\n"
-        "      ||" Gold "                                                 " WineRed "||\n");
-    printf(WineRed "      =====================================================\n" Reset);
+    PB(); printf(WineRed "        .~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~.\n");
+    PB(); printf(WineRed "       /~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\\\n");
+    PB(); printf(WineRed "      =====================================================\n");
+    PB(); printf("      ||" Gold "       _      ___   ___  _   _  ___  ____        " WineRed "||\n");
+    PB(); printf("      ||" Gold "      | |    |_ _| / _ \\| | | |/ _ \\|  _ \\       " WineRed "||\n");
+    PB(); printf("      ||" Gold "      | |     | | | | | | | | | | | | |_) |      " WineRed "||\n");
+    PB(); printf("   ===||" Gold "      | |___  | | | |_| | |_| | |_| |  _ <       " WineRed "||\n");
+    PB(); printf(" //   ||" Gold "      |_____||___| \\__\\_\\\\___/ \\___/|_| \\_\\\      " WineRed "||\n");
+    PB(); printf("||    ||" Gold "                                                 " WineRed "||\n");
+    PB(); printf("||    ||" Gold "           ____ _____ ___  ____  _____           " WineRed "||\n");
+    PB(); printf("||    ||" Gold "          / ___|_   _/ _ \\|  _ \\| ____|          " WineRed "||\n");
+    PB(); printf("||    ||" Gold "          \\___ \\ | || | | | |_) |  _|            " WineRed "||\n");
+    PB(); printf(" \\\\   ||" Gold "           ___) || || |_| |  _ <| |___           " WineRed "||\n");
+    PB(); printf("   ===||" Gold "          |____/ |_| \\___/|_| \\_\\\\____|          " WineRed "||\n");
+    PB(); printf("      ||" Gold "                                                 " WineRed "||\n");
+    PB(); printf("      ||" Gold "           Welcome to the Liquor Store           " WineRed "||\n");
+    PB(); printf("      ||" Gold "              Luxury in Every Pour.              " WineRed "||\n");
+    PB(); printf("      ||" Gold "                                                 " WineRed "||\n");
+    PB(); printf(WineRed "      =====================================================\n" Reset);
 }
 
 int role = 0;
@@ -566,19 +601,19 @@ void login()
     {
         printWelcomeMessage();
 
-        printf(WineRed "      ||" Gold "                      LOGIN                      " WineRed "||\n");
-        printf("      =====================================================\n");
-        printf("      ||" Gold "                   1. Admin                      " WineRed "||\n");
-        printf("      ||" Blue "                   2. Customer                   " WineRed "||\n");
-        printf("      =====================================================\n");
+        PB(); printf(WineRed "      ||" Gold "                      LOGIN                      " WineRed "||\n");
+        PB(); printf("      =====================================================\n");
+        PB(); printf("      ||" Gold "                   1. Admin                      " WineRed "||\n");
+        PB(); printf("      ||" Blue "                   2. Customer                   " WineRed "||\n");
+        PB(); printf("      =====================================================\n");
         do
         {
-            printf(Blue "      Choose[1/2]: ");
+            PB(); printf(Blue "      Choose[1/2]: ");
             scanf("%d", &choice);
 
             if (choice < 1 || choice > 2)
             {
-                printf(Red "      Invalid Menu!\n" Reset);
+                PB(); printf(Red "      Invalid Menu!\n" Reset);
             }
 
         } while (choice < 1 || choice > 2);
@@ -588,23 +623,23 @@ void login()
 
         case 1:
 
-            printf(Gold "      Username : ");
+            PB(); printf(Gold "      Username : ");
             scanf("%s", username);
 
-            printf("      Password : ");
+            PB(); printf("      Password : ");
             scanf("%s", password);
 
             if (strcmp(username, "admin") == 0 && strcmp(password, "12345") == 0)
             {
                 role = 1;
-                printf(Green "\n      Login Success as Admin!\n" Reset);
+                PB(); printf(Green "      Login Success as Admin!\n" Reset);
 
                 pressEnter();
                 clearScreen();
             }
             else
             {
-                printf(Red "      Wrong Username or Password!\n" Reset);
+                PB(); printf(Red "      Wrong Username or Password!\n" Reset);
 
                 pressEnter();
                 clearScreen();
@@ -613,14 +648,14 @@ void login()
 
         case 2:
             role = 2;
-            printf(Green "\n      Login Success as Customer!\n" Reset);
+            PB(); printf(Green "      Login Success as Customer!\n" Reset);
 
             pressEnter();
             clearScreen();
             break;
 
         default:
-            printf(Red "      Invalid Menu!\n" Reset);
+            PB(); printf(Red "      Invalid Menu!\n" Reset);
         }
 
     } while (role == 0);
@@ -692,17 +727,17 @@ void insert()
 
     productList();
 
-    printf(WineRed "+--------------------------------------------------+\n");
-    printf("|" White "  Insert Product                                  " WineRed "|\n");
-    printf(WineRed "+--------------------------------------------------+\n" Reset);
+    PB(); printf(WineRed "      +--------------------------------------------------+\n");
+    PB(); printf("      |" White "  Insert Product                                  " WineRed "|\n");
+    PB(); printf(WineRed "      +--------------------------------------------------+\n" Reset);
     do
     {
-        printf("Product Name: ");
+        PB(); printf("      Product Name: ");
         scanf(" %[^\n]", name);
 
         if (checkName(root, name))
         {
-            printf(Green "Product is already exists!\n" Reset);
+            PB(); printf(Green "      Product is already exists!\n" Reset);
         }
     } while (checkName(root, name));
 
@@ -710,22 +745,22 @@ void insert()
 
     do
     {
-        printf("Product Price: ");
+        PB(); printf("      Product Price: ");
         scanf("%d", &price);
 
         if (price <= 0)
         {
-            printf(Red "Price cannot be negative or zero!\n" Reset);
+            PB(); printf(Red "      Price cannot be negative or zero!\n" Reset);
         }
         else if (price > 100000000)
         {
-            printf(Red "Price cannot be greater than 100 million!\n" Reset);
+            PB(); printf(Red "      Price cannot be greater than 100 million!\n" Reset);
         }
     } while (price <= 0 || price > 100000000);
 
     root = insertproduct(root, id, name, price);
     writeFile();
-    printf(Green "\nProduct Added Successfully!\n" Reset);
+    PB(); printf(Green "      Product Added Successfully!\n" Reset);
 
     pressEnter();
     clearScreen();
@@ -736,7 +771,7 @@ void searchID(struct product *curr, int id)
 
     if (curr == NULL)
     {
-        printf("Product Not Found!\n");
+        PB(); printf("      Product Not Found!\n");
         return;
     }
 
@@ -745,15 +780,12 @@ void searchID(struct product *curr, int id)
         char rupiah[50];
         formatRupiah(curr->price, rupiah);
 
-        printf(WineRed "\n=================== " Gold "PRODUCT FOUND " WineRed "===================\n");
-        printf(
-            "|| " White "Id    : %-5d                                   " WineRed "||\n"
-            "|| " White "Name  : %-19s                     " WineRed "||\n"
-            "|| " White "Price : " GreenMoney "Rp%-16s                      " WineRed "||\n",
-            curr->id,
-            curr->name,
-            rupiah);
-        printf("=====================================================\n" Reset);
+        printf("\n");
+        PB(); printf(WineRed "      =================== " Gold "PRODUCT FOUND " WineRed "===================\n");
+        PB(); printf("      || " White "Id    : %-5d                                   " WineRed "||\n", curr->id);
+        PB(); printf("      || " White "Name  : %-19s                     " WineRed "||\n", curr->name);
+        PB(); printf("      || " White "Price : " GreenMoney "Rp%-16s                      " WineRed "||\n", rupiah);
+        PB(); printf("      =====================================================\n" Reset);
         return;
     }
 
@@ -783,15 +815,12 @@ void searchName(struct product *curr, char name[])
         char rupiah[50];
         formatRupiah(curr->price, rupiah);
 
-        printf(WineRed "\n=================== " Gold "PRODUCT FOUND " WineRed "===================\n");
-        printf(
-            "|| " White "Id    : %-5d                                   " WineRed "||\n"
-            "|| " White "Name  : %-19s                     " WineRed "||\n"
-            "|| " White "Price : " GreenMoney "Rp%-16s                      " WineRed "||\n",
-            curr->id,
-            curr->name,
-            rupiah);
-        printf("=====================================================\n" Reset);
+        printf("\n");
+        PB(); printf(WineRed "      =================== " Gold "PRODUCT FOUND " WineRed "===================\n");
+        PB(); printf("      || " White "Id    : %-5d                                   " WineRed "||\n", curr->id);
+        PB(); printf("      || " White "Name  : %-19s                     " WineRed "||\n", curr->name);
+        PB(); printf("      || " White "Price : " GreenMoney "Rp%-16s                      " WineRed "||\n", rupiah);
+        PB(); printf("      =====================================================\n" Reset);
     }
 
     searchName(curr->right, name);
@@ -806,14 +835,14 @@ void search()
     do
     {
         productList();
-        printf(WineRed "+--------------------------------------------------+\n");
-        printf("|" White "  Search Product                                  " WineRed "|\n");
-        printf(WineRed "+--------------------------------------------------+\n");
-        printf("|" White " 1. Search by ID                                  " WineRed "|\n");
-        printf("|" White " 2. Search by Name                                " WineRed "|\n");
-        printf("|" White " 3. Back to Main Menu                             " WineRed "|\n");
-        printf(WineRed "+--------------------------------------------------+\n" Reset);
-        printf("Choose: ");
+        PB(); printf(WineRed "      +--------------------------------------------------+\n");
+        PB(); printf("      |" White "  Search Product                                  " WineRed "|\n");
+        PB(); printf(WineRed "      +--------------------------------------------------+\n");
+        PB(); printf("      |" White " 1. Search by ID                                  " WineRed "|\n");
+        PB(); printf("      |" White " 2. Search by Name                                " WineRed "|\n");
+        PB(); printf("      |" White " 3. Back to Main Menu                             " WineRed "|\n");
+        PB(); printf(WineRed "      +--------------------------------------------------+\n" Reset);
+        PB(); printf("      Choose: ");
         scanf("%d", &choice);
 
         if (choice == 1)
@@ -821,7 +850,7 @@ void search()
 
             int id;
 
-            printf("Input Product ID: ");
+            PB(); printf("      Input Product ID: ");
             scanf("%d", &id);
 
             searchID(root, id);
@@ -835,7 +864,7 @@ void search()
 
             char name[100];
 
-            printf("Input Product Name: ");
+            PB(); printf("      Input Product Name: ");
             scanf(" %[^\n]", name);
 
             int found = checkName(root, name);
@@ -846,7 +875,7 @@ void search()
             }
             else
             {
-                printf("Product Not Found!\n");
+                PB(); printf("      Product Not Found!\n");
             }
 
             pressEnter();
@@ -861,7 +890,7 @@ void search()
 
         else
         {
-            printf("Invalid Menu!\n");
+            PB(); printf("      Invalid Menu!\n");
         }
 
     } while (choice < 1 || choice > 3);
@@ -875,21 +904,21 @@ void delete()
     char name[100], confirm;
 
     productList();
-    printf(WineRed "+--------------------------------------------------+\n");
-    printf("|" White "  Delete Product                                  " WineRed "|\n");
-    printf(WineRed "+--------------------------------------------------+\n");
-    printf("|" White " 1. Delete by ID                                  " WineRed "|\n");
-    printf("|" White " 2. Delete by Name                                " WineRed "|\n");
-    printf("|" White " 3. Back to Main Menu                             " WineRed "|\n");
-    printf(WineRed "+--------------------------------------------------+\n" Reset);
+    PB(); printf(WineRed "      +--------------------------------------------------+\n");
+    PB(); printf("      |" White "  Delete Product                                  " WineRed "|\n");
+    PB(); printf(WineRed "      +--------------------------------------------------+\n");
+    PB(); printf("      |" White "  1. Delete by ID                                  " WineRed "|\n");
+    PB(); printf("      |" White "  2. Delete by Name                                " WineRed "|\n");
+    PB(); printf("      |" White "  3. Back to Main Menu                             " WineRed "|\n");
+    PB(); printf(WineRed "      +--------------------------------------------------+\n" Reset);
     do
     {
-        printf("Choose: ");
+        PB(); printf("      Choose: ");
         scanf("%d", &choice);
 
         if (choice < 1 || choice > 3)
         {
-            printf("Invalid Menu!\n");
+            PB(); printf("      Invalid Menu!\n");
         }
     } while (choice < 1 || choice > 3);
 
@@ -898,20 +927,20 @@ void delete()
     case 1:
         do
         {
-            printf("Input Product ID: ");
+            PB(); printf("      Input Product ID: ");
             scanf("%d", &id);
 
             searchID(root, id);
 
             if (checkID(root, id))
             {
-                printf("Are you sure you want to delete this product? [y/n]: ");
+                PB(); printf("      Are you sure you want to delete this product? [y/n]: ");
                 scanf(" %c", &confirm);
                 if (confirm == 'y' || confirm == 'Y')
                 {
                     root = deleteproduct(root, id);
                     writeFile();
-                    printf("Product deleted successfully!\n");
+                    PB(); printf("      Product deleted successfully!\n");
 
                     pressEnter();
                     clearScreen();
@@ -919,7 +948,7 @@ void delete()
                 }
                 else
                 {
-                    printf("Deletion cancelled.\n");
+                    PB(); printf("      Deletion cancelled.\n");
 
                     pressEnter();
                     clearScreen();
@@ -932,12 +961,12 @@ void delete()
     case 2:
         do
         {
-            printf("Input Product Name: ");
+            PB(); printf("      Input Product Name: ");
             scanf(" %[^\n]", name);
 
             if (!checkName(root, name))
             {
-                printf("Product Not Found!\n");
+                PB(); printf("      Product Not Found!\n");
             }
             else
             {
@@ -946,7 +975,7 @@ void delete()
 
             if (checkName(root, name))
             {
-                printf("Are you sure you want to delete this product? [y/n]: ");
+                PB(); printf("      Are you sure you want to delete this product? [y/n]: ");
                 scanf(" %c", &confirm);
                 if (confirm == 'y' || confirm == 'Y')
                 {
@@ -956,7 +985,7 @@ void delete()
                     {
                         root = deleteproduct(root, id);
                         writeFile();
-                        printf("Product deleted successfully!\n");
+                        PB(); printf("      Product deleted successfully!\n");
 
                         pressEnter();
                         clearScreen();
@@ -966,7 +995,7 @@ void delete()
                 }
                 else
                 {
-                    printf("Deletion cancelled.\n");
+                    PB(); printf("      Deletion cancelled.\n");
                     pressEnter();
                     clearScreen();
                     break;
@@ -1069,12 +1098,12 @@ void updateProductName(int id, int choice, char name[])
 
     do
     {
-        printf("Input New Name: ");
+        PB(); printf("      Input New Name: ");
         scanf(" %[^\n]", newName);
 
         if (checkName(root, newName))
         {
-            printf("Product is already exists!\n");
+            PB(); printf("      Product is already exists!\n");
         }
     } while (checkName(root, newName));
 
@@ -1094,16 +1123,16 @@ void updateProductPrice(int id, int choice, char name[])
 
     do
     {
-        printf("Input New Price: ");
+        PB(); printf("      Input New Price: ");
         scanf("%d", &newPrice);
 
         if (newPrice <= 0)
         {
-            printf("Price cannot be negative or zero!\n");
+            PB(); printf("      Price cannot be negative or zero!\n");
         }
         else if (newPrice > 100000000)
         {
-            printf("Price cannot be greater than 100 million!\n");
+            PB(); printf("      Price cannot be greater than 100 million!\n");
         }
     } while (newPrice <= 0 || newPrice > 100000000);
 
@@ -1122,20 +1151,20 @@ void selectUpdateNameBasedOn()
     int choice, id;
     char name[100];
 
-    printf(WineRed "+--------------------------------------------------+\n");
-    printf("|" White "  Update Based On                                 " WineRed "|\n");
-    printf(WineRed "+--------------------------------------------------+\n");
-    printf("| " White "1. ID                                            " WineRed "|\n");
-    printf("| " White "2. Name                                          " WineRed "|\n");
-    printf("+--------------------------------------------------+\n" Reset);
+    PB(); printf(WineRed "      +--------------------------------------------------+\n");
+    PB(); printf("      |" White "  Update Based On                                 " WineRed "|\n");
+    PB(); printf(WineRed "      +--------------------------------------------------+\n");
+    PB(); printf("      | " White "1. ID                                            " WineRed "|\n");
+    PB(); printf("      | " White "2. Name                                          " WineRed "|\n");
+    PB(); printf("      +--------------------------------------------------+\n" Reset);
     do
     {
-        printf("Choose: ");
+        PB(); printf("      Choose: ");
         scanf("%d", &choice);
 
         if (choice < 1 || choice > 2)
         {
-            printf(Red "Invalid Choice!\n" Reset);
+            PB(); printf(Red "      Invalid Choice!\n" Reset);
         }
     } while (choice < 1 || choice > 2);
 
@@ -1143,7 +1172,7 @@ void selectUpdateNameBasedOn()
     {
         do
         {
-            printf("Input Product ID: ");
+            PB(); printf("      Input Product ID: ");
             scanf("%d", &id);
 
             searchID(root, id);
@@ -1152,7 +1181,7 @@ void selectUpdateNameBasedOn()
             {
                 updateProductName(id, choice, name);
                 writeFile();
-                printf(Green "\nProduct name updated successfully!\n" Reset);
+                PB(); printf(Green "      Product name updated successfully!\n" Reset);
 
                 pressEnter();
                 clearScreen();
@@ -1164,12 +1193,12 @@ void selectUpdateNameBasedOn()
     {
         do
         {
-            printf("Input Product Name: ");
+            PB(); printf("      Input Product Name: ");
             scanf(" %[^\n]", name);
 
             if (!checkName(root, name))
             {
-                printf(Red "Product Not Found!\n" Reset);
+                PB(); printf(Red "      Product Not Found!\n" Reset);
             }
             else
             {
@@ -1180,7 +1209,7 @@ void selectUpdateNameBasedOn()
             {
                 updateProductName(id, choice, name);
                 writeFile();
-                printf(Green "\nProduct name updated successfully!\n" Reset);
+                PB(); printf(Green "      Product name updated successfully!\n" Reset);
 
                 pressEnter();
                 clearScreen();
@@ -1200,20 +1229,20 @@ void selectUpdatePriceBasedOn()
     int choice, id;
     char name[100];
 
-    printf(WineRed "+--------------------------------------------------+\n");
-    printf("|" White "  Update Based On                                 " WineRed "|\n");
-    printf(WineRed "+--------------------------------------------------+\n");
-    printf("| " White "1. ID                                            " WineRed "|\n");
-    printf("| " White "2. Name                                          " WineRed "|\n");
-    printf("+--------------------------------------------------+\n" Reset);
+    PB(); printf(WineRed "      +--------------------------------------------------+\n");
+    PB(); printf("      |" White "  Update Based On                                 " WineRed "|\n");
+    PB(); printf(WineRed "      +--------------------------------------------------+\n");
+    PB(); printf("      | " White "1. ID                                            " WineRed "|\n");
+    PB(); printf("      | " White "2. Name                                          " WineRed "|\n");
+    PB(); printf("      +--------------------------------------------------+\n" Reset);
     do
     {
-        printf("Choose: ");
+        PB(); printf("      Choose: ");
         scanf("%d", &choice);
 
         if (choice < 1 || choice > 2)
         {
-            printf(Red "Invalid Choice!\n" Reset);
+            PB(); printf(Red "      Invalid Choice!\n" Reset);
         }
     } while (choice < 1 || choice > 2);
 
@@ -1221,7 +1250,7 @@ void selectUpdatePriceBasedOn()
     {
         do
         {
-            printf("Input Product ID: ");
+            PB(); printf("      Input Product ID: ");
             scanf("%d", &id);
 
             searchID(root, id);
@@ -1230,7 +1259,7 @@ void selectUpdatePriceBasedOn()
             {
                 updateProductPrice(id, choice, name);
                 writeFile();
-                printf(Green "\nProduct Price updated successfully!\n" Reset);
+                PB(); printf(Green "      Product Price updated successfully!\n" Reset);
 
                 pressEnter();
                 clearScreen();
@@ -1242,12 +1271,12 @@ void selectUpdatePriceBasedOn()
     {
         do
         {
-            printf("Input Product Name: ");
+            PB(); printf("      Input Product Name: ");
             scanf(" %[^\n]", name);
 
             if (!checkName(root, name))
             {
-                printf(Red "Product Not Found!\n" Reset);
+                PB(); printf(Red "      Product Not Found!\n" Reset);
             }
             else
             {
@@ -1258,7 +1287,7 @@ void selectUpdatePriceBasedOn()
             {
                 updateProductPrice(id, choice, name);
                 writeFile();
-                printf(Green "\nProduct Price updated successfully!\n" Reset);
+                PB(); printf(Green "Product Price updated successfully!\n" Reset);
 
                 pressEnter();
                 clearScreen();
@@ -1280,21 +1309,21 @@ void update()
     int choice;
 
     productList();
-    printf(WineRed "+--------------------------------------------------+\n");
-    printf("|" White "  Update Product                                  " WineRed "|\n");
-    printf(WineRed "+--------------------------------------------------+\n");
-    printf("| " White "1. Update Product Name                           " WineRed "|\n");
-    printf("| " White "2. Update Product Price                          " WineRed "|\n");
-    printf("| " White "3. Back to Main Menu                             " WineRed "|\n");
-    printf("+--------------------------------------------------+\n" Reset);
+    PB(); printf(WineRed "      +--------------------------------------------------+\n");
+    PB(); printf("      |" White "  Update Product                                  " WineRed "|\n");
+    PB(); printf(WineRed "      +--------------------------------------------------+\n");
+    PB(); printf("      | " White "1. Update Product Name                           " WineRed "|\n");
+    PB(); printf("      | " White "2. Update Product Price                          " WineRed "|\n");
+    PB(); printf("      | " White "3. Back to Main Menu                             " WineRed "|\n");
+    PB(); printf("      +--------------------------------------------------+\n" Reset);
     do
     {
-        printf("Choose: ");
+        PB(); printf("      Choose: ");
         scanf("%d", &choice);
 
         if (choice < 1 || choice > 3)
         {
-            printf(Red "Invalid Menu!\n" Reset);
+            PB(); printf(Red "      Invalid Menu!\n" Reset);
         }
     } while (choice < 1 || choice > 3);
 
@@ -1351,13 +1380,13 @@ void checkout()
 
         int id, qty;
 
-        printf(WineRed "+-------------------- " Gold "CHECKOUT " WineRed "--------------------+\n" Reset);
+        PB(); printf(WineRed "      +-------------------- " Gold "CHECKOUT " WineRed "--------------------+\n" Reset);
 
         struct product *item = NULL;
 
         do
         {
-            printf("Input Product ID : ");
+            PB(); printf("      Input Product ID : ");
             scanf("%d", &id);
 
             item = NULL;
@@ -1365,40 +1394,41 @@ void checkout()
 
             if (item == NULL)
             {
-                printf("Product Not Found!\n");
+                PB(); printf(Red "      Product Not Found!\n" Reset);
             }
 
         } while (item == NULL);
 
         do
         {
-            printf("Input Quantity   : ");
+            PB(); printf("      Input Quantity   : ");
             scanf("%d", &qty);
 
             if (qty <= 0)
             {
-                printf("Quantity must be greater than 0!\n");
+                PB(); printf(Red "      Quantity must be greater than 0!\n" Reset);
             }
         } while (qty <= 0);
 
         int total = item->price * qty;
         totalall += total;
 
-        printf("\nItem Added!\n");
-        printf("Product : %s\n", item->name);
-        printf("Subtotal: " GreenMoney "Rp");
+        printf("\n");
+        PB(); printf("      Item Added!\n");
+        PB(); printf("      Product : %s\n", item->name);
+        PB(); printf("      Subtotal: " GreenMoney "Rp");
         printRupiah(total);
         printf(Reset "\n");
 
         do
         {
-            printf("\nAdd More Item? [y/n]: ");
+            PB(); printf("      Add More Item? [y/n]: ");
             scanf(" %c", &choice);
 
             if (choice != 'y' && choice != 'Y' &&
                 choice != 'n' && choice != 'N')
             {
-                printf("Invalid Choice!\n");
+                PB(); printf(Red "      Invalid Choice!\n" Reset);
             }
 
         } while (choice != 'y' && choice != 'Y' &&
@@ -1406,8 +1436,9 @@ void checkout()
 
     } while (choice == 'y' || choice == 'Y');
 
-    printf(WineRed "\n==================== " Gold "FINAL TOTAL " WineRed "====================\n");
-    printf(White "Grand Total : " GreenMoney "Rp");
+    printf("\n");
+    PB(); printf(WineRed "      ==================== " Gold "FINAL TOTAL " WineRed "====================\n");
+    PB(); printf(White "      Grand Total : " GreenMoney "Rp");
     printRupiah(totalall);
     printf(Reset "\n");
 
@@ -1419,35 +1450,35 @@ void sortingMenu()
 {
     clearScreen();
 
-    printf(WineRed "+--------------------------------------------------+\n");
-    printf("|" White "  Sorting Menu                                    " WineRed "|\n");
-    printf(WineRed "+--------------------------------------------------+\n" Reset);
+    PB(); printf(WineRed "      +--------------------------------------------------+\n");
+    PB(); printf("      |" White "  Sorting Menu                                    " WineRed "|\n");
+    PB(); printf(WineRed "      +--------------------------------------------------+\n" Reset);
 
     do
     {
-        printf("1. Sort by Name\n");
-        printf("2. Sort by Price\n");
-        printf("Choose: ");
+        PB(); printf("      1. Sort by Name\n");
+        PB(); printf("      2. Sort by Price\n");
+        PB(); printf("      Choose: ");
         scanf("%d", &sortType);
 
         if (sortType < 1 || sortType > 2)
         {
-            printf("Invalid Choice!\n");
+            PB(); printf(Red "      Invalid Choice!\n" Reset);
         }
     } while (sortType < 1 || sortType > 2);
 
-    printf("\n");
+    PB(); printf("\n");
 
     do
     {
-        printf("1. Ascending\n");
-        printf("2. Descending\n");
-        printf("Choose: ");
+        PB(); printf("      1. Ascending\n");
+        PB(); printf("      2. Descending\n");
+        PB(); printf("      Choose: ");
         scanf("%d", &sortOrder);
 
         if (sortOrder < 1 || sortOrder > 2)
         {
-            printf("Invalid Choice!\n");
+            PB(); printf(Red "      Invalid Choice!\n" Reset);
         }
     } while (sortOrder < 1 || sortOrder > 2);
 
@@ -1461,27 +1492,27 @@ void logout()
 
     do
     {
-        printf("Are you sure you want to logout? [y/n]: ");
+        PB(); printf("      Are you sure you want to logout? [y/n]: ");
         scanf(" %c", &confirm);
 
         if (confirm == 'y' || confirm == 'Y')
         {
             role = 0;
-            printf("Logged out successfully!\n");
+            PB(); printf("      Logged out successfully!\n");
             pressEnter();
             clearScreen();
             return;
         }
         else if (confirm == 'n' || confirm == 'N')
         {
-            printf("Logout cancelled.\n");
+            PB(); printf("      Logout cancelled.\n");
             pressEnter();
             clearScreen();
             return;
         }
         else
         {
-            printf("Invalid Choice!\n");
+            PB(); printf(Red "      Invalid Choice!\n" Reset);
         }
 
     } while (1);
@@ -1559,25 +1590,25 @@ void adminMenu()
     {
         printBanner();
         productList();
-        printf(WineRed "+--------------------------------------------------+\n");
-        printf("|" White " Status: " Gold "Admin                                    " WineRed "|\n");
-        printf("+--------------------------------------------------+\n");
-        printf("|" White " 1. Insert Product                                " WineRed "|\n");
-        printf("|" White " 2. Search Product                                " WineRed "|\n");
-        printf("|" White " 3. Update Product                                " WineRed "|\n");
-        printf("|" White " 4. Delete Product                                " WineRed "|\n");
-        printf("|" White " 5. Sorting Menu                                  " WineRed "|\n");
-        printf("|" White " 6. Logout                                        " WineRed "|\n");
-        printf("|" White " 7. Exit Program                                  " WineRed "|\n");
-        printf("+--------------------------------------------------+\n" Reset);
+        PB(); printf(WineRed "      +--------------------------------------------------+\n");
+        PB(); printf("      |" White " Status: " Gold "Admin                                    " WineRed "|\n");
+        PB(); printf("      +--------------------------------------------------+\n");
+        PB(); printf("      |" White " 1. Insert Product                                " WineRed "|\n");
+        PB(); printf("      |" White " 2. Search Product                                " WineRed "|\n");
+        PB(); printf("      |" White " 3. Update Product                                " WineRed "|\n");
+        PB(); printf("      |" White " 4. Delete Product                                " WineRed "|\n");
+        PB(); printf("      |" White " 5. Sorting Menu                                  " WineRed "|\n");
+        PB(); printf("      |" White " 6. Logout                                        " WineRed "|\n");
+        PB(); printf("      |" White " 7. Exit Program                                  " WineRed "|\n");
+        PB(); printf("      +--------------------------------------------------+\n" Reset);
         do
         {
-            printf("Choose: ");
+            PB(); printf("      Choose: ");
             scanf("%d", &choice);
 
             if (choice < 1 || choice > 7)
             {
-                printf("Invalid Menu!\n");
+                PB(); printf(Red "      Invalid Menu!\n" Reset);
             }
         } while (choice < 1 || choice > 7);
 
@@ -1607,10 +1638,11 @@ void adminMenu()
             }
             break;
         case 7:
-            printf(WineRed "\n====================================================\n");
-            printf(Gold "        Thank you for visiting Liquor Store.        \n");
-            printf("               Have a wonderful day!                \n" Reset);
-            printf(WineRed "====================================================\n" Reset);
+            printf("\n");
+            PB(); printf(WineRed "      ====================================================\n");
+            PB(); printf(Gold "              Thank you for visiting Liquor Store.        \n");
+            PB(); printf("                     Have a wonderful day!                \n" Reset);
+            PB(); printf(WineRed "      ====================================================\n" Reset);
             break;
         }
     } while (choice != 7);
@@ -1624,23 +1656,23 @@ void customerMenu()
     {
         printBanner();
         productList();
-        printf(WineRed "+--------------------------------------------------+\n");
-        printf("|" White " Status: " Blue "Customer                                 " WineRed "|\n");
-        printf("+--------------------------------------------------+\n");
-        printf("|" White " 1. Search Product                                " WineRed "|\n");
-        printf("|" White " 2. Sorting Menu                                  " WineRed "|\n");
-        printf("|" White " 3. Checkout Product                              " WineRed "|\n");
-        printf("|" White " 4. Logout                                        " WineRed "|\n");
-        printf("|" White " 5. Exit Program                                  " WineRed "|\n");
-        printf("+--------------------------------------------------+\n" Reset);
+        PB(); printf(WineRed "      +--------------------------------------------------+\n");
+        PB(); printf("      |" White " Status: " Blue "Customer                                 " WineRed "|\n");
+        PB(); printf("      +--------------------------------------------------+\n");
+        PB(); printf("      |" White " 1. Search Product                                " WineRed "|\n");
+        PB(); printf("      |" White " 2. Sorting Menu                                  " WineRed "|\n");
+        PB(); printf("      |" White " 3. Checkout Product                              " WineRed "|\n");
+        PB(); printf("      |" White " 4. Logout                                        " WineRed "|\n");
+        PB(); printf("      |" White " 5. Exit Program                                  " WineRed "|\n");
+        PB(); printf("      +--------------------------------------------------+\n" Reset);
         do
         {
-            printf("Choose: ");
+            PB(); printf("      Choose: ");
             scanf("%d", &choice);
 
             if (choice < 1 || choice > 5)
             {
-                printf("Invalid Menu!\n");
+                PB(); printf(Red "      Invalid Menu!\n" Reset);
             }
         } while (choice < 1 || choice > 5);
 
@@ -1664,10 +1696,11 @@ void customerMenu()
             }
             break;
         case 5:
-            printf(WineRed "\n====================================================\n");
-            printf(Gold "        Thank you for visiting Liquor Store.        \n");
-            printf("               Have a wonderful day!                \n" Reset);
-            printf(WineRed "====================================================\n" Reset);
+            printf("\n");
+            PB(); printf(WineRed "      ====================================================\n");
+            PB(); printf(Gold "              Thank you for visiting Liquor Store.        \n");
+            PB(); printf("                     Have a wonderful day!                \n" Reset);
+            PB(); printf(WineRed "      ====================================================\n" Reset);
             break;
         }
     } while (choice != 5);
